@@ -83,8 +83,8 @@ export default function AboutPage() {
           <div className={styles.devCard}>
             <div className={styles.devAvatar}>MA</div>
             <div>
-              <div className={styles.devName}>Muhammad Adeel</div>
-              <div className={styles.devRole}>Student — CS-A, 23i-0739</div>
+              <div className={styles.devName}>Muhammad Adeel and Sagar Mehmood</div>
+              <div className={styles.devRole}>Student — CS-A</div>
               <div className={styles.devUni}>National University of Computer & Emerging Sciences, Islamabad</div>
               <div className={styles.devTags}>
                 <span className={styles.tag}>Web Programming</span>
