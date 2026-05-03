@@ -1,0 +1,199 @@
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.pageTitle {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #262220;
+  font-family: var(--font-display);
+  margin-bottom: 0.25rem;
+}
+
+.pageSubtitle { font-size: 0.875rem; color: #9e9690; }
+
+.addBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2e4057 0%, #3d5475 100%);
+  box-shadow: 0 4px 14px rgba(46,64,87,0.35);
+  border: none;
+  cursor: pointer;
+  transition: transform 250ms ease;
+  white-space: nowrap;
+}
+
+.addBtn:hover { transform: translateY(-2px); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.outfitCard {
+  background: #ffffff;
+  border: 1px solid #e2ddd6;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  transition: transform 250ms ease, box-shadow 250ms ease;
+  position: relative;
+}
+
+.outfitCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(46,64,87,0.12);
+}
+
+.outfitTop {
+  background: linear-gradient(135deg, #eef1f6 0%, #fdf6e3 100%);
+  padding: 2rem;
+  text-align: center;
+  font-size: 3rem;
+}
+
+.outfitBody { padding: 1rem; }
+
+.outfitName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #262220;
+  margin-bottom: 0.25rem;
+}
+
+.outfitOccasion {
+  font-size: 0.75rem;
+  color: #736c66;
+  margin-bottom: 0.75rem;
+}
+
+.outfitMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.outfitDate { font-size: 0.75rem; color: #9e9690; }
+
+.deleteOutfitBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 0.5rem;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 150ms ease;
+}
+
+.deleteOutfitBtn:hover { background: #fecaca; }
+
+.emptyState {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 5rem 2rem;
+}
+
+.emptyIcon  { font-size: 4rem; margin-bottom: 1rem; }
+.emptyTitle { font-size: 1.25rem; font-weight: 600; color: #514b45; margin-bottom: 0.5rem; }
+.emptyDesc  { font-size: 0.875rem; color: #9e9690; margin-bottom: 1.5rem; }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,18,16,0.55);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 500px;
+  background: #ffffff;
+  border-radius: 1.75rem;
+  padding: 2rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 48px rgba(46,64,87,0.2);
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #262220;
+  margin-bottom: 1.5rem;
+  font-family: var(--font-display);
+}
+
+.formField  { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 1rem; }
+.formLabel  { font-size: 0.875rem; font-weight: 500; color: #3a3530; }
+
+.formInput,
+.formSelect {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.625rem;
+  border: 1.5px solid #e2ddd6;
+  font-size: 0.875rem;
+  color: #262220;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  border-color: #c9a84c;
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+}
+
+.modalActions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+
+.btnCancel {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 0.625rem;
+  font-weight: 500;
+  color: #514b45;
+  background: #f0ede8;
+  border: 1.5px solid #e2ddd6;
+  cursor: pointer;
+}
+
+.btnSave {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 0.625rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2e4057 0%, #3d5475 100%);
+  border: none;
+  cursor: pointer;
+}
+
+.btnSave:disabled { opacity: 0.6; cursor: not-allowed; }
