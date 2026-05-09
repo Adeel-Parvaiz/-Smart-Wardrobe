@@ -3,7 +3,7 @@
 A full-stack digital wardrobe and outfit planner built with **Next.js 16**, **MongoDB Atlas**, **NextAuth.js**, and **pure CSS Modules**.
 
 > **Roll Numbers:** 23i-0739 | 23i-0562  
-> **Section:** —  
+> **Section:A
 > **Course:** Web Programming
 
 ---
