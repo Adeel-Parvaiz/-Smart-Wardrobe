@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     }
 
     await PasswordResetTokenModel.deleteMany({
-      userId: new mongoose.Types.ObjectId(user._id),
+      userId: new mongoose.Types.ObjectId((user as any)._id),
       $or: [{ usedAt: null }, { expiresAt: { $lt: new Date() } }],
     });
 
