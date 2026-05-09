@@ -10,6 +10,18 @@ import {
 } from "@/lib/validation";
 import mongoose from "mongoose";
 
+type LeanWardrobeItem = {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  category: string;
+  color?: string;
+  brand?: string;
+  imageUrl: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export async function GET() {
   const session = await getAuthSession();
   if (!session?.user?.id) {
@@ -17,11 +29,12 @@ export async function GET() {
   }
 
   await dbConnect();
+
   const items = await WardrobeItemModel.find({
     userId: new mongoose.Types.ObjectId(session.user.id),
   })
     .sort({ createdAt: -1 })
-    .lean();
+    .lean<LeanWardrobeItem[]>();  // ✅ typed
 
   return NextResponse.json(
     items.map((i) => ({
@@ -45,12 +58,12 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const name = sanitizeRequiredText(body?.name, LIMITS.name);
+  const name     = sanitizeRequiredText(body?.name,     LIMITS.name);
   const category = sanitizeRequiredText(body?.category, LIMITS.category);
-  const color = sanitizeOptionalText(body?.color, LIMITS.color);
-  const brand = sanitizeOptionalText(body?.brand, LIMITS.brand);
+  const color    = sanitizeOptionalText(body?.color,    LIMITS.color);
+  const brand    = sanitizeOptionalText(body?.brand,    LIMITS.brand);
   const imageUrl = sanitizeRequiredText(body?.imageUrl, LIMITS.imageUrl);
-  const notes = sanitizeOptionalText(body?.notes, LIMITS.notes);
+  const notes    = sanitizeOptionalText(body?.notes,    LIMITS.notes);
 
   if (!name || !category || !imageUrl) {
     return NextResponse.json(
@@ -67,6 +80,7 @@ export async function POST(request: Request) {
   }
 
   await dbConnect();
+
   const item = await WardrobeItemModel.create({
     userId: new mongoose.Types.ObjectId(session.user.id),
     name,
@@ -92,5 +106,3 @@ export async function POST(request: Request) {
     { status: 201 },
   );
 }
-
-
