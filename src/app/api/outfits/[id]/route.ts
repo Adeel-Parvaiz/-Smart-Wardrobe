@@ -1,3 +1,14 @@
+import { NextResponse, NextRequest } from "next/server";
+import { getAuthSession } from "@/lib/auth";
+import { dbConnect } from "@/lib/mongodb";
+import { OutfitModel } from "@/models/Outfit";
+import { OutfitItemModel } from "@/models/OutfitItem";
+import { WardrobeItemModel } from "@/models/WardrobeItem";
+import mongoose from "mongoose";
+
+type Context = {
+  params: Promise<{ id: string }>;
+};
 
 export async function GET(
   _request: NextRequest,
