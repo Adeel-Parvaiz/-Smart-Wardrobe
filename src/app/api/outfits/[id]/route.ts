@@ -110,7 +110,7 @@ export async function DELETE(
   const existing = await OutfitModel.findOne({
     _id: outfitObjectId,
     userId: userObjectId,
-  }).lean();
+  }).lean() as any;
 
   if (!existing) {
     return NextResponse.json(
