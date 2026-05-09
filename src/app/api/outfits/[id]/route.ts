@@ -40,22 +40,21 @@ export async function GET(_request: NextRequest, { params }: Context) {
     _id: { $in: wardrobeItemIds },
   }).lean();
 
-  return NextResponse.json({
-    id: (outfit as any)._id.toString(),
-    name:      outfit.name,
-    occasion:  outfit.occasion ?? undefined,
-    createdAt: outfit.createdAt,
-    updatedAt: outfit.updatedAt,
-    wardrobeItems: wardrobeItems.map((wi) => ({
-      id:       wi._id.toString(),
-      name:     wi.name,
-      category: wi.category,
-      color:    wi.color    ?? undefined,
-      brand:    wi.brand    ?? undefined,
-      imageUrl: wi.imageUrl,
-    })),
-  });
-}
+ return NextResponse.json({
+  id: (outfit as any)._id.toString(),
+  name: outfit.name,
+  occasion: outfit.occasion ?? undefined,
+  createdAt: outfit.createdAt,
+  updatedAt: outfit.updatedAt,
+  wardrobeItems: wardrobeItems.map((wi) => ({
+    id: wi._id.toString(),
+    name: wi.name,
+    category: wi.category,
+    color: wi.color ?? undefined,
+    brand: wi.brand ?? undefined,
+    imageUrl: wi.imageUrl,
+  })),
+});
 
 // ── DELETE: remove outfit and its items ───────────────────────
 export async function DELETE(_request: NextRequest, { params }: Context) {
