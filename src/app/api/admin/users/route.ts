@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { dbConnect } from "@/lib/mongodb";
+import { UserModel } from "@/models/User";
 
 export async function GET() {
   const session = await getAuthSession();
@@ -12,17 +13,20 @@ export async function GET() {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      status: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  await dbConnect();
+  const users = await UserModel.find({})
+    .select({ name: 1, email: 1, role: 1, status: 1, createdAt: 1 })
+    .sort({ createdAt: -1 })
+    .lean();
 
-  return NextResponse.json(users);
+  return NextResponse.json(
+    users.map((u) => ({
+      id: u._id.toString(),
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      status: u.status,
+      createdAt: u.createdAt,
+    })),
+  );
 }

@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { dbConnect } from "@/lib/mongodb";
+import { OutfitModel } from "@/models/Outfit";
+import { OutfitItemModel } from "@/models/OutfitItem";
+import { WardrobeItemModel } from "@/models/WardrobeItem";
 import {
   LIMITS,
   sanitizeOptionalText,
   sanitizeRequiredText,
   toCleanString,
 } from "@/lib/validation";
+import mongoose from "mongoose";
 
 export async function GET() {
   const session = await getAuthSession();
@@ -14,27 +18,42 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const outfits = await prisma.outfit.findMany({
-    where: { userId: session.user.id },
-    include: {
-      outfitItems: {
-        include: {
-          wardrobeItem: {
-            select: {
-              id: true,
-              name: true,
-              category: true,
-              color: true,
-              brand: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
+  await dbConnect();
+  const userObjectId = new mongoose.Types.ObjectId(session.user.id);
+  const outfits = await OutfitModel.find({ userId: userObjectId }).sort({ createdAt: -1 }).lean();
 
-  return NextResponse.json(outfits);
+  const outfitIds = outfits.map(o => o._id);
+  const outfitItems = await OutfitItemModel.find({ outfitId: { $in: outfitIds } }).lean();
+  
+  const wardrobeItemIds = outfitItems.map(oi => oi.wardrobeItemId);
+  const wardrobeItems = await WardrobeItemModel.find({ _id: { $in: wardrobeItemIds } }).lean();
+
+  const wardrobeItemMap = new Map(wardrobeItems.map(wi => [wi._id.toString(), wi]));
+
+  return NextResponse.json(
+    outfits.map((o) => {
+      const currentOutfitItems = outfitItems.filter(oi => oi.outfitId.toString() === o._id.toString());
+      const linkedWardrobeItems = currentOutfitItems.map(oi => {
+        const wi = wardrobeItemMap.get(oi.wardrobeItemId.toString());
+        return wi ? {
+          id: wi._id.toString(),
+          name: wi.name,
+          category: wi.category,
+          color: wi.color ?? undefined,
+          brand: wi.brand ?? undefined,
+        } : null;
+      }).filter(Boolean);
+
+      return {
+        id: o._id.toString(),
+        name: o.name,
+        occasion: o.occasion ?? undefined,
+        createdAt: o.createdAt,
+        updatedAt: o.updatedAt,
+        wardrobeItems: linkedWardrobeItems,
+      };
+    })
+  );
 }
 
 export async function POST(request: Request) {
@@ -59,45 +78,48 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Select at least one wardrobe item." }, { status: 400 });
   }
 
-  const ownedItems = await prisma.wardrobeItem.findMany({
-    where: {
-      id: { in: itemIds },
-      userId: session.user.id,
-    },
-    select: { id: true },
-  });
+  await dbConnect();
+  const userObjectId = new mongoose.Types.ObjectId(session.user.id);
+  
+  // Verify all items exist and belong to user
+  const ownedItems = await WardrobeItemModel.find({
+    _id: { $in: itemIds.map(id => new mongoose.Types.ObjectId(id)) },
+    userId: userObjectId,
+  }).lean();
 
   if (ownedItems.length !== itemIds.length) {
     return NextResponse.json({ error: "Some selected items are invalid." }, { status: 400 });
   }
 
-  const outfit = await prisma.outfit.create({
-    data: {
-      userId: session.user.id,
-      name,
-      occasion,
-      outfitItems: {
-        createMany: {
-          data: itemIds.map((wardrobeItemId: string) => ({ wardrobeItemId })),
-        },
-      },
-    },
-    include: {
-      outfitItems: {
-        include: {
-          wardrobeItem: {
-            select: {
-              id: true,
-              name: true,
-              category: true,
-              color: true,
-              brand: true,
-            },
-          },
-        },
-      },
-    },
+  const outfit = await OutfitModel.create({
+    userId: userObjectId,
+    name,
+    occasion,
   });
 
-  return NextResponse.json(outfit, { status: 201 });
+  await OutfitItemModel.insertMany(
+    itemIds.map(wardrobeItemId => ({
+      outfitId: outfit._id,
+      wardrobeItemId: new mongoose.Types.ObjectId(wardrobeItemId),
+    }))
+  );
+
+  return NextResponse.json({
+    id: outfit._id.toString(),
+    name: outfit.name,
+    occasion: outfit.occasion ?? undefined,
+    createdAt: outfit.createdAt,
+    updatedAt: outfit.updatedAt,
+    wardrobeItems: ownedItems.map(wi => ({
+      id: wi._id.toString(),
+      name: wi.name,
+      category: wi.category,
+      color: wi.color ?? undefined,
+      brand: wi.brand ?? undefined,
+    })),
+  }, { status: 201 });
 }
+
+
+
+

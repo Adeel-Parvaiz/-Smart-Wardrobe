@@ -1,6 +1,7 @@
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { dbConnect } from "@/lib/mongodb";
+import { UserModel } from "@/models/User";
 import {
   isValidEmail,
   LIMITS,
@@ -31,20 +32,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    await dbConnect();
+    const existing = await UserModel.findOne({ email }).select({ _id: 1 }).lean();
     if (existing) {
       return NextResponse.json({ error: "Email already in use." }, { status: 409 });
     }
 
     const passwordHash = await hash(password, 12);
 
-    await prisma.user.create({
-      data: {
-        name,
-        email,
-        passwordHash,
-        role: "USER",
-      },
+    await UserModel.create({
+      name,
+      email,
+      passwordHash,
+      role: "USER",
+      status: "ACTIVE",
     });
 
     return NextResponse.json({ success: true }, { status: 201 });
@@ -52,3 +53,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to register user." }, { status: 500 });
   }
 }
+
+

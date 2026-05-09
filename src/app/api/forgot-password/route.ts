@@ -1,6 +1,9 @@
 import { randomBytes, createHash } from "crypto";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { dbConnect } from "@/lib/mongodb";
+import { PasswordResetTokenModel } from "@/models/PasswordResetToken";
+import { UserModel } from "@/models/User";
+import mongoose from "mongoose";
 
 const RESET_TOKEN_TTL_MINUTES = 30;
 
@@ -20,28 +23,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, message: genericMessage });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    await dbConnect();
+    const user = await UserModel.findOne({ email }).select({ _id: 1 }).lean();
     if (!user) {
       return NextResponse.json({ success: true, message: genericMessage });
     }
 
-    await prisma.passwordResetToken.deleteMany({
-      where: {
-        userId: user.id,
-        OR: [{ usedAt: null }, { expiresAt: { lt: new Date() } }],
-      },
+    await PasswordResetTokenModel.deleteMany({
+      userId: new mongoose.Types.ObjectId(user._id),
+      $or: [{ usedAt: null }, { expiresAt: { $lt: new Date() } }],
     });
 
     const token = randomBytes(32).toString("hex");
     const tokenHash = hashToken(token);
     const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000);
 
-    await prisma.passwordResetToken.create({
-      data: {
-        userId: user.id,
-        tokenHash,
-        expiresAt,
-      },
+    await PasswordResetTokenModel.create({
+      userId: new mongoose.Types.ObjectId(user._id),
+      tokenHash,
+      expiresAt,
+      usedAt: null,
     });
 
     const resetPath = `/reset-password?token=${encodeURIComponent(token)}`;

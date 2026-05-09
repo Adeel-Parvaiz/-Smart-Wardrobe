@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { dbConnect } from "@/lib/mongodb";
+import { WardrobeItemModel } from "@/models/WardrobeItem";
 import {
   isValidImageUrl,
   LIMITS,
   sanitizeOptionalText,
   sanitizeRequiredText,
 } from "@/lib/validation";
+import mongoose from "mongoose";
 
 export async function GET() {
   const session = await getAuthSession();
@@ -14,12 +16,26 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const items = await prisma.wardrobeItem.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: "desc" },
-  });
+  await dbConnect();
+  const items = await WardrobeItemModel.find({
+    userId: new mongoose.Types.ObjectId(session.user.id),
+  })
+    .sort({ createdAt: -1 })
+    .lean();
 
-  return NextResponse.json(items);
+  return NextResponse.json(
+    items.map((i) => ({
+      id: i._id.toString(),
+      name: i.name,
+      category: i.category,
+      color: i.color ?? undefined,
+      brand: i.brand ?? undefined,
+      imageUrl: i.imageUrl,
+      notes: i.notes ?? undefined,
+      createdAt: i.createdAt,
+      updatedAt: i.updatedAt,
+    })),
+  );
 }
 
 export async function POST(request: Request) {
@@ -50,17 +66,31 @@ export async function POST(request: Request) {
     );
   }
 
-  const item = await prisma.wardrobeItem.create({
-    data: {
-      userId: session.user.id,
-      name,
-      category,
-      color,
-      brand,
-      imageUrl,
-      notes,
-    },
+  await dbConnect();
+  const item = await WardrobeItemModel.create({
+    userId: new mongoose.Types.ObjectId(session.user.id),
+    name,
+    category,
+    color,
+    brand,
+    imageUrl,
+    notes,
   });
 
-  return NextResponse.json(item, { status: 201 });
+  return NextResponse.json(
+    {
+      id: item._id.toString(),
+      name: item.name,
+      category: item.category,
+      color: item.color ?? undefined,
+      brand: item.brand ?? undefined,
+      imageUrl: item.imageUrl,
+      notes: item.notes ?? undefined,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    },
+    { status: 201 },
+  );
 }
+
+

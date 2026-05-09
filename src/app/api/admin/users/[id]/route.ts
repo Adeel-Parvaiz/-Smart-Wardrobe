@@ -1,7 +1,8 @@
-import { AccountStatus, Role } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { dbConnect } from "@/lib/mongodb";
+import { UserModel } from "@/models/User";
+import mongoose from "mongoose";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -16,11 +17,14 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   const { id } = await params;
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json({ error: "User not found." }, { status: 404 });
+  }
   const body = await request.json();
   const nextRole = (body?.role ?? "").toString().toUpperCase();
   const nextStatus = (body?.status ?? "").toString().toUpperCase();
 
-  const data: { role?: Role; status?: AccountStatus } = {};
+  const data: { role?: "ADMIN" | "USER"; status?: "ACTIVE" | "INACTIVE" } = {};
   if (nextRole === "ADMIN" || nextRole === "USER") {
     data.role = nextRole;
   }
@@ -32,18 +36,23 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: "No valid update fields provided." }, { status: 400 });
   }
 
-  const updated = await prisma.user.update({
-    where: { id },
-    data,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      status: true,
-      createdAt: true,
-    },
-  });
+  await dbConnect();
+  const updated = await UserModel.findByIdAndUpdate(
+    new mongoose.Types.ObjectId(id),
+    { $set: data },
+    { new: true, projection: { name: 1, email: 1, role: 1, status: 1, createdAt: 1 } },
+  ).lean();
 
-  return NextResponse.json(updated);
+  if (!updated) {
+    return NextResponse.json({ error: "User not found." }, { status: 404 });
+  }
+
+  return NextResponse.json({
+    id: updated._id.toString(),
+    name: updated.name,
+    email: updated.email,
+    role: updated.role,
+    status: updated.status,
+    createdAt: updated.createdAt,
+  });
 }

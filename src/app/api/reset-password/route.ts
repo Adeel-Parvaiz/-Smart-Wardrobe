@@ -1,8 +1,11 @@
 import { createHash } from "crypto";
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { dbConnect } from "@/lib/mongodb";
+import { PasswordResetTokenModel } from "@/models/PasswordResetToken";
+import { UserModel } from "@/models/User";
 import { LIMITS, sanitizePassword, toCleanString } from "@/lib/validation";
+import mongoose from "mongoose";
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -27,13 +30,12 @@ export async function POST(request: Request) {
 
     const tokenHash = hashToken(token);
 
-    const resetToken = await prisma.passwordResetToken.findFirst({
-      where: {
-        tokenHash,
-        usedAt: null,
-        expiresAt: { gt: new Date() },
-      },
-    });
+    await dbConnect();
+    const resetToken = await PasswordResetTokenModel.findOne({
+      tokenHash,
+      usedAt: null,
+      expiresAt: { $gt: new Date() },
+    }).lean();
 
     if (!resetToken) {
       return NextResponse.json({ error: "Invalid or expired reset token." }, { status: 400 });
@@ -41,21 +43,16 @@ export async function POST(request: Request) {
 
     const passwordHash = await hash(password, 12);
 
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: resetToken.userId },
-        data: { passwordHash },
-      }),
-      prisma.passwordResetToken.update({
-        where: { id: resetToken.id },
-        data: { usedAt: new Date() },
-      }),
-      prisma.passwordResetToken.deleteMany({
-        where: {
-          userId: resetToken.userId,
-          usedAt: null,
-          id: { not: resetToken.id },
-        },
+    const userObjectId = new mongoose.Types.ObjectId(resetToken.userId);
+    const tokenObjectId = new mongoose.Types.ObjectId(resetToken._id);
+
+    await Promise.all([
+      UserModel.updateOne({ _id: userObjectId }, { $set: { passwordHash } }),
+      PasswordResetTokenModel.updateOne({ _id: tokenObjectId }, { $set: { usedAt: new Date() } }),
+      PasswordResetTokenModel.deleteMany({
+        userId: userObjectId,
+        usedAt: null,
+        _id: { $ne: tokenObjectId },
       }),
     ]);
 

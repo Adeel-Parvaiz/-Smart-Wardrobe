@@ -16,9 +16,7 @@ type Outfit = {
   name: string;
   occasion?: string;
   createdAt: string;
-  outfitItems: Array<{
-    wardrobeItem: WardrobeItem;
-  }>;
+  wardrobeItems: WardrobeItem[];
 };
 
 const OCCASIONS = ["Casual", "Formal", "Party", "Work", "Sports", "Travel", "Date Night"];
@@ -153,16 +151,16 @@ export default function OutfitsPage() {
 
                   <div className={styles.linkedItems}>
                     <div className={styles.linkedCount}>
-                      {outfit.outfitItems.length} item{outfit.outfitItems.length === 1 ? "" : "s"}
+                      {outfit.wardrobeItems.length} item{outfit.wardrobeItems.length === 1 ? "" : "s"}
                     </div>
                     <div className={styles.itemChips}>
-                      {outfit.outfitItems.slice(0, 3).map((entry) => (
-                        <span key={entry.wardrobeItem.id} className={styles.itemChip}>
-                          {entry.wardrobeItem.name}
+                      {outfit.wardrobeItems.slice(0, 3).map((item) => (
+                        <span key={item.id} className={styles.itemChip}>
+                          {item.name}
                         </span>
                       ))}
-                      {outfit.outfitItems.length > 3 && (
-                        <span className={styles.itemChip}>+{outfit.outfitItems.length - 3} more</span>
+                      {outfit.wardrobeItems.length > 3 && (
+                        <span className={styles.itemChip}>+{outfit.wardrobeItems.length - 3} more</span>
                       )}
                     </div>
                   </div>

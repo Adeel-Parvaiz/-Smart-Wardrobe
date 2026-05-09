@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { dbConnect } from "@/lib/mongodb";
+import { OutfitModel } from "@/models/Outfit";
+import { OutfitItemModel } from "@/models/OutfitItem";
+import mongoose from "mongoose";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -11,14 +14,24 @@ export async function DELETE(_request: Request, { params }: Params) {
   }
 
   const { id } = await params;
-  const existing = await prisma.outfit.findFirst({
-    where: { id, userId: session.user.id },
-  });
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
+  }
+
+  await dbConnect();
+  const userObjectId = new mongoose.Types.ObjectId(session.user.id);
+  const outfitObjectId = new mongoose.Types.ObjectId(id);
+
+  const existing = await OutfitModel.findOne({ _id: outfitObjectId, userId: userObjectId }).lean();
 
   if (!existing) {
     return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
   }
 
-  await prisma.outfit.delete({ where: { id } });
+  await OutfitModel.deleteOne({ _id: outfitObjectId, userId: userObjectId });
+  await OutfitItemModel.deleteMany({ outfitId: outfitObjectId });
+
   return NextResponse.json({ success: true });
 }
+
+

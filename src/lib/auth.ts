@@ -1,9 +1,9 @@
 import { compare } from "bcryptjs";
-import { Role } from "@prisma/client";
 import type { NextAuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "@/lib/prisma";
+import { dbConnect } from "@/lib/mongodb";
+import { UserModel } from "@/models/User";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -22,9 +22,10 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
-        });
+        await dbConnect();
+        const user = await UserModel.findOne({
+          email: credentials.email.toLowerCase().trim(),
+        }).lean();
 
         if (!user || user.status !== "ACTIVE") {
           return null;
@@ -36,7 +37,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id,
+          id: user._id.toString(),
           name: user.name,
           email: user.email,
           role: user.role,
@@ -57,7 +58,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = (token.role as Role | undefined) ?? "USER";
+        session.user.role = (token.role as any) ?? "USER";
         session.user.status = (token.status as string | undefined) ?? "ACTIVE";
       }
       return session;
@@ -65,6 +66,8 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
+
+
 
 export async function getAuthSession() {
   return getServerSession(authOptions);
