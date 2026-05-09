@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Smart Wardrobe
 
-## Getting Started
+Smart Wardrobe is a Next.js app for clothing catalog management, outfit planning, and role-based administration.
 
-First, run the development server:
+## Tech Stack
+
+- Next.js 16 (App Router)
+- React 19 + TypeScript
+- Prisma + PostgreSQL
+- NextAuth (credentials)
+- bcryptjs for password hashing
+
+## Environment Variables
+
+Create a `.env` file with at least:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB_NAME"
+NEXTAUTH_SECRET="replace-with-a-long-random-secret"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+Optional seed variables:
+
+```env
+ADMIN_EMAIL="admin@smartwardrobe.local"
+ADMIN_PASSWORD="Admin123!"
+ADMIN_NAME="Smart Wardrobe Admin"
+```
+
+## Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Generate Prisma client:
+
+```bash
+npm run db:generate
+```
+
+Push schema to database (dev):
+
+```bash
+npm run db:push
+```
+
+Create/update an admin user:
+
+```bash
+npm run db:seed
+```
+
+Run the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Database Commands
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run db:generate   # prisma generate
+npm run db:push       # prisma db push
+npm run db:migrate    # prisma migrate dev
+npm run db:seed       # seed admin user
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Password Reset Flow
 
-## Learn More
+- `POST /api/forgot-password` creates a time-limited token and stores only a token hash.
+- `POST /api/reset-password` validates the token hash, expiry, and used state.
+- Reset token validity is 30 minutes.
+- In development mode, forgot-password response includes a temporary `resetPath` helper.
 
-To learn more about Next.js, take a look at the following resources:
+## Available Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Registration and credential login
+- Role/status-aware sessions (`USER`, `ADMIN`, `ACTIVE`, `INACTIVE`)
+- Wardrobe item CRUD
+- Outfit CRUD
+- Admin user management (list users, toggle role/status)
+- Route protection middleware for dashboard/admin pages

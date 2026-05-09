@@ -33,8 +33,8 @@ export default function RegisterPage() {
       { setError("All fields are required"); return; }
     if (!/\S+@\S+\.\S+/.test(form.email))
       { setError("Enter a valid email"); return; }
-    if (form.password.length < 6)
-      { setError("Password must be at least 6 characters"); return; }
+    if (form.password.length < 8)
+      { setError("Password must be at least 8 characters"); return; }
     if (form.password !== form.confirm)
       { setError("Passwords do not match"); return; }
 
@@ -94,7 +94,7 @@ export default function RegisterPage() {
             <input
               type="password"
               className={styles.input}
-              placeholder="Min 6 characters"
+                placeholder="Min 8 characters"
               value={form.password}
               onChange={e => setForm({...form, password: e.target.value})}
             />

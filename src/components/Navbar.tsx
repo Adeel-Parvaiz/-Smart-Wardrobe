@@ -14,7 +14,7 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  const userRole = (session?.user as any)?.role as string | undefined;
+  const userRole = session?.user?.role;
   const isAdmin  = userRole === "ADMIN";
   const isLoggedIn = status === "authenticated";
 
@@ -27,8 +27,6 @@ export default function Navbar() {
     if (profileOpen) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [profileOpen]);
-
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   const linkClass = (path: string) =>
     pathname === path
@@ -141,28 +139,34 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className={styles.mobileMenu}>
-          <Link href="/"        className={mobileLinkClass("/")}>Home</Link>
-          <Link href="/about"   className={mobileLinkClass("/about")}>About</Link>
-          <Link href="/contact" className={mobileLinkClass("/contact")}>Contact</Link>
+          <Link href="/"        className={mobileLinkClass("/")} onClick={() => setMobileOpen(false)}>Home</Link>
+          <Link href="/about"   className={mobileLinkClass("/about")} onClick={() => setMobileOpen(false)}>About</Link>
+          <Link href="/contact" className={mobileLinkClass("/contact")} onClick={() => setMobileOpen(false)}>Contact</Link>
 
           {isLoggedIn && (
             <>
-              <Link href="/wardrobe" className={mobileLinkClass("/wardrobe")}>My Wardrobe</Link>
-              <Link href="/outfits"  className={mobileLinkClass("/outfits")}>Outfits</Link>
+              <Link href="/wardrobe" className={mobileLinkClass("/wardrobe")} onClick={() => setMobileOpen(false)}>My Wardrobe</Link>
+              <Link href="/outfits"  className={mobileLinkClass("/outfits")} onClick={() => setMobileOpen(false)}>Outfits</Link>
             </>
           )}
 
           {isAdmin && (
-            <Link href="/admin" className={mobileLinkClass("/admin")}>🛡️ Admin</Link>
+            <Link href="/admin" className={mobileLinkClass("/admin")} onClick={() => setMobileOpen(false)}>🛡️ Admin</Link>
           )}
 
           {!isLoggedIn ? (
             <div className={styles.mobileAuthRow}>
-              <Link href="/login"    className={styles.btnGhost}>Log In</Link>
-              <Link href="/register" className={styles.btnPrimary}>Sign Up</Link>
+              <Link href="/login"    className={styles.btnGhost} onClick={() => setMobileOpen(false)}>Log In</Link>
+              <Link href="/register" className={styles.btnPrimary} onClick={() => setMobileOpen(false)}>Sign Up</Link>
             </div>
           ) : (
-            <button className={styles.mobileSignOut} onClick={() => signOut({ callbackUrl: "/" })}>
+            <button
+              className={styles.mobileSignOut}
+              onClick={() => {
+                setMobileOpen(false);
+                signOut({ callbackUrl: "/" });
+              }}
+            >
               Sign Out
             </button>
           )}

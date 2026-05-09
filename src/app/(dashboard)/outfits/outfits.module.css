@@ -23,6 +23,16 @@
 
 .pageSubtitle { font-size: 0.875rem; color: #9e9690; }
 
+.errorAlert {
+  padding: 0.75rem 1rem;
+  border-radius: 0.875rem;
+  background: #fef2f2;
+  border: 1px solid rgba(185,28,28,0.2);
+  color: #b91c1c;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
 .addBtn {
   display: inline-flex;
   align-items: center;
@@ -82,6 +92,31 @@
   font-size: 0.75rem;
   color: #736c66;
   margin-bottom: 0.75rem;
+}
+
+.linkedItems {
+  margin-bottom: 0.75rem;
+}
+
+.linkedCount {
+  font-size: 0.75rem;
+  color: #736c66;
+  margin-bottom: 0.35rem;
+}
+
+.itemChips {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.itemChip {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: #f3efea;
+  color: #514b45;
+  border: 1px solid #e6dfd8;
 }
 
 .outfitMeta {
@@ -173,6 +208,49 @@
 }
 
 .modalActions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+
+.helperText {
+  margin: 0;
+  color: #736c66;
+  font-size: 0.85rem;
+}
+
+.itemPicker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0.2rem;
+}
+
+.pickItemBtn {
+  text-align: left;
+  border: 1.5px solid #e2ddd6;
+  background: #fff;
+  border-radius: 0.7rem;
+  padding: 0.55rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.pickItemBtnActive {
+  border-color: #2e4057;
+  background: #eef2f7;
+}
+
+.pickItemName {
+  color: #262220;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.pickItemMeta {
+  color: #736c66;
+  font-size: 0.72rem;
+}
 
 .btnCancel {
   flex: 1;

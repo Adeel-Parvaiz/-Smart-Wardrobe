@@ -11,6 +11,8 @@ type Item = {
   category: string;
   color?: string;
   brand?: string;
+  imageUrl?: string;
+  notes?: string;
 };
 
 export default function WardrobePage() {
@@ -20,12 +22,19 @@ export default function WardrobePage() {
   const [filter, setFilter]       = useState("All");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing]     = useState<Item | null>(null);
-  const [form, setForm]           = useState({ name: "", category: "Tops", color: "", brand: "" });
+  const [form, setForm]           = useState({
+    name: "",
+    category: "Tops",
+    color: "",
+    brand: "",
+    imageUrl: "",
+    notes: "",
+  });
   const [saving, setSaving]       = useState(false);
   const [error, setError]         = useState("");
+  const [imgErrorIds, setImgErrorIds] = useState<Record<string, true>>({});
 
   async function load() {
-    setLoading(true);
     try {
       const res  = await fetch("/api/wardrobe");
       const data = await res.json();
@@ -36,6 +45,7 @@ export default function WardrobePage() {
     setLoading(false);
   }
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, []);
 
   const filtered = items.filter(i => {
@@ -46,28 +56,42 @@ export default function WardrobePage() {
 
   function openAdd() {
     setEditing(null);
-    setForm({ name: "", category: "Tops", color: "", brand: "" });
+    setForm({ name: "", category: "Tops", color: "", brand: "", imageUrl: "", notes: "" });
     setError("");
     setModalOpen(true);
   }
 
   function openEdit(item: Item) {
     setEditing(item);
-    setForm({ name: item.name, category: item.category, color: item.color ?? "", brand: item.brand ?? "" });
+    setForm({
+      name: item.name,
+      category: item.category,
+      color: item.color ?? "",
+      brand: item.brand ?? "",
+      imageUrl: item.imageUrl ?? "",
+      notes: item.notes ?? "",
+    });
     setError("");
     setModalOpen(true);
   }
 
   async function handleSave() {
     if (!form.name) { setError("Item name is required"); return; }
+    if (!form.imageUrl) { setError("Image URL is required"); return; }
     setSaving(true);
     const url    = editing ? `/api/wardrobe/${editing.id}` : "/api/wardrobe";
     const method = editing ? "PUT" : "POST";
-    await fetch(url, {
+    const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
+    const data = await res.json();
+    if (!res.ok) {
+      setSaving(false);
+      setError(data?.error ?? "Failed to save item.");
+      return;
+    }
     setSaving(false);
     setModalOpen(false);
     load();
@@ -148,14 +172,24 @@ export default function WardrobePage() {
           {filtered.map(item => (
             <div key={item.id} className={styles.itemCard}>
               <div className={styles.imageContainer}>
-                <div className={styles.imagePlaceholder}>
-                  {item.category === "Tops"       ? "👕" :
-                   item.category === "Bottoms"    ? "👖" :
-                   item.category === "Shoes"      ? "👟" :
-                   item.category === "Outerwear"  ? "🧥" :
-                   item.category === "Formal"     ? "👔" :
-                   item.category === "Accessories"? "👜" : "👗"}
-                </div>
+                {item.imageUrl && !imgErrorIds[item.id] ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className={styles.itemImage}
+                    loading="lazy"
+                    onError={() => setImgErrorIds((prev) => ({ ...prev, [item.id]: true }))}
+                  />
+                ) : (
+                  <div className={styles.imagePlaceholder}>
+                    {item.category === "Tops"       ? "👕" :
+                     item.category === "Bottoms"    ? "👖" :
+                     item.category === "Shoes"      ? "👟" :
+                     item.category === "Outerwear"  ? "🧥" :
+                     item.category === "Formal"     ? "👔" :
+                     item.category === "Accessories"? "👜" : "👗"}
+                  </div>
+                )}
                 <div className={styles.cardActions}>
                   <button
                     className={`${styles.actionBtn} ${styles.actionBtnEdit}`}
@@ -199,6 +233,16 @@ export default function WardrobePage() {
             </div>
 
             <div className={styles.formField}>
+              <label className={styles.formLabel}>Image URL *</label>
+              <input
+                className={styles.formInput}
+                placeholder="https://... or /images/..."
+                value={form.imageUrl}
+                onChange={e => setForm({...form, imageUrl: e.target.value})}
+              />
+            </div>
+
+            <div className={styles.formField}>
               <label className={styles.formLabel}>Category *</label>
               <select
                 className={styles.formSelect}
@@ -230,6 +274,16 @@ export default function WardrobePage() {
                   onChange={e => setForm({...form, brand: e.target.value})}
                 />
               </div>
+            </div>
+
+            <div className={styles.formField}>
+              <label className={styles.formLabel}>Notes</label>
+              <textarea
+                className={styles.formTextarea}
+                placeholder="Optional notes (fit, season, fabric, etc.)"
+                value={form.notes}
+                onChange={e => setForm({ ...form, notes: e.target.value })}
+              />
             </div>
 
             <div className={styles.modalActions}>
