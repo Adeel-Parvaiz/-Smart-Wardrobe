@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000);
 
     await PasswordResetTokenModel.create({
-      userId: new mongoose.Types.ObjectId(user._id),
+      userId:new mongoose.Types.ObjectId((user as any)._id),
       tokenHash,
       expiresAt,
       usedAt: null,
