@@ -3,10 +3,18 @@ import { getAuthSession } from "@/lib/auth";
 import { dbConnect } from "@/lib/mongodb";
 import { UserModel } from "@/models/User";
 import mongoose from "mongoose";
+import { NextRequest } from "next/server";
 
-type Params = { params: { id: string } };
+type Params = {
+  params: {
+    id: string;
+  };
+};
 
-export async function PATCH(request: Request, { params }: Params) {
+export async function PATCH(
+  request: NextRequest,
+  { params }: Params
+) {
   const session = await getAuthSession();
 
   if (!session?.user?.id) {
@@ -20,7 +28,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const { id } = params;
 
   if (!mongoose.isValidObjectId(id)) {
-    return NextResponse.json({ error: "Invalid user ID." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
   }
 
   const body = await request.json();
@@ -28,7 +36,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const nextRole = (body?.role ?? "").toString().toUpperCase();
   const nextStatus = (body?.status ?? "").toString().toUpperCase();
 
-  const data: { role?: "ADMIN" | "USER"; status?: "ACTIVE" | "INACTIVE" } = {};
+  const data: any = {};
 
   if (nextRole === "ADMIN" || nextRole === "USER") {
     data.role = nextRole;
@@ -60,10 +68,10 @@ export async function PATCH(request: Request, { params }: Params) {
         createdAt: 1,
       },
     }
-  ).exec();
+  );
 
   if (!updated) {
-    return NextResponse.json({ error: "User not found." }, { status: 404 });
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
   return NextResponse.json({
