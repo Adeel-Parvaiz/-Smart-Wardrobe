@@ -41,7 +41,7 @@ export async function GET(_request: NextRequest, { params }: Context) {
   }).lean();
 
   return NextResponse.json({
-    id:        outfit._id.toString(),
+    (outfit as any)._id.toString(),
     name:      outfit.name,
     occasion:  outfit.occasion ?? undefined,
     createdAt: outfit.createdAt,
