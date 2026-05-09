@@ -4,7 +4,11 @@ import { dbConnect } from "@/lib/mongodb";
 import { UserModel } from "@/models/User";
 import mongoose from "mongoose";
 
-type Context = { params: Promise<{ id: string }> };
+type Context = {
+  params: {
+    id: string;
+  };
+};
 
 export async function PATCH(request: NextRequest, context: Context) {
   const session = await getAuthSession();
@@ -13,7 +17,7 @@ export async function PATCH(request: NextRequest, context: Context) {
   if (session.user.role !== "ADMIN")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { id } = await context.params;
+ const { id } = context.params;
 
   if (!mongoose.isValidObjectId(id))
     return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
