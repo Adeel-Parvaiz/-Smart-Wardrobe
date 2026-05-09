@@ -11,8 +11,8 @@ type LeanUser = {
   name: string;
   email: string;
   passwordHash: string;
-  role: string;
-  status: string;
+  role: "ADMIN" | "USER";   // ✅ literal type, not string
+  status: "ACTIVE" | "INACTIVE";
 };
 
 export const authOptions: NextAuthOptions = {
@@ -48,11 +48,11 @@ export const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          status: user.status,
+          id:     user._id.toString(),
+          name:   user.name,
+          email:  user.email,
+          role:   user.role,    // now "ADMIN" | "USER" ✅
+          status: user.status,  // now "ACTIVE" | "INACTIVE" ✅
         };
       },
     }),
@@ -60,16 +60,16 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        token.id     = user.id;
+        token.role   = user.role;
         token.status = user.status;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = (token.role as any) ?? "USER";
+        session.user.id     = token.id as string;
+        session.user.role   = (token.role as "ADMIN" | "USER") ?? "USER";
         session.user.status = (token.status as string | undefined) ?? "ACTIVE";
       }
       return session;
