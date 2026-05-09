@@ -70,7 +70,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id     = token.id as string;
         session.user.role   = (token.role as "ADMIN" | "USER") ?? "USER";
-        session.user.status = (token.status as string | undefined) ?? "ACTIVE";
+        session.user.status = (token.status as "ACTIVE" | "INACTIVE" | undefined) ?? "ACTIVE";
       }
       return session;
     },
