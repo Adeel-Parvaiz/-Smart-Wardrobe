@@ -4,10 +4,11 @@ import { dbConnect } from "@/lib/mongodb";
 import { UserModel } from "@/models/User";
 import mongoose from "mongoose";
 
-type Params = { params: Promise<{ id: string }> };
+type Params = { params: { id: string } };
 
 export async function PATCH(request: Request, { params }: Params) {
   const session = await getAuthSession();
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -16,32 +17,50 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { id } = await params;
+  const { id } = params;
+
   if (!mongoose.isValidObjectId(id)) {
-    return NextResponse.json({ error: "User not found." }, { status: 404 });
+    return NextResponse.json({ error: "Invalid user ID." }, { status: 400 });
   }
+
   const body = await request.json();
+
   const nextRole = (body?.role ?? "").toString().toUpperCase();
   const nextStatus = (body?.status ?? "").toString().toUpperCase();
 
   const data: { role?: "ADMIN" | "USER"; status?: "ACTIVE" | "INACTIVE" } = {};
+
   if (nextRole === "ADMIN" || nextRole === "USER") {
     data.role = nextRole;
   }
+
   if (nextStatus === "ACTIVE" || nextStatus === "INACTIVE") {
     data.status = nextStatus;
   }
 
   if (!data.role && !data.status) {
-    return NextResponse.json({ error: "No valid update fields provided." }, { status: 400 });
+    return NextResponse.json(
+      { error: "No valid update fields provided." },
+      { status: 400 }
+    );
   }
 
   await dbConnect();
+
   const updated = await UserModel.findByIdAndUpdate(
-    new mongoose.Types.ObjectId(id),
+    id,
     { $set: data },
-    { new: true, projection: { name: 1, email: 1, role: 1, status: 1, createdAt: 1 } },
-  ).lean();
+    {
+      new: true,
+      projection: {
+        name: 1,
+        email: 1,
+        role: 1,
+        status: 1,
+        createdAt: 1,
+      },
+    }
+  ).exec();
 
   if (!updated) {
     return NextResponse.json({ error: "User not found." }, { status: 404 });
