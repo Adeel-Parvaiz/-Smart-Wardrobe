@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import styles from "./outfits.module.css";
 
 type WardrobeItem = {
@@ -142,42 +143,49 @@ export default function OutfitsPage() {
           ) : (
             outfits.map(outfit => (
               <div key={outfit.id} className={styles.outfitCard}>
-                <div className={styles.outfitTop}>✨</div>
-                <div className={styles.outfitBody}>
-                  <div className={styles.outfitName}>{outfit.name}</div>
-                  {outfit.occasion && (
-                    <div className={styles.outfitOccasion}>📍 {outfit.occasion}</div>
-                  )}
+                <Link href={`/outfits/${outfit.id}`} className={styles.outfitLink}>
+                  <div className={styles.outfitTop}>✨</div>
+                  <div className={styles.outfitBody}>
+                    <div className={styles.outfitName}>{outfit.name}</div>
+                    {outfit.occasion && (
+                      <div className={styles.outfitOccasion}>📍 {outfit.occasion}</div>
+                    )}
 
-                  <div className={styles.linkedItems}>
-                    <div className={styles.linkedCount}>
-                      {outfit.wardrobeItems.length} item{outfit.wardrobeItems.length === 1 ? "" : "s"}
+                    <div className={styles.linkedItems}>
+                      <div className={styles.linkedCount}>
+                        {outfit.wardrobeItems.length} item{outfit.wardrobeItems.length === 1 ? "" : "s"}
+                      </div>
+                      <div className={styles.itemChips}>
+                        {outfit.wardrobeItems.slice(0, 3).map((item) => (
+                          <span key={item.id} className={styles.itemChip}>
+                            {item.name}
+                          </span>
+                        ))}
+                        {outfit.wardrobeItems.length > 3 && (
+                          <span className={styles.itemChip}>+{outfit.wardrobeItems.length - 3} more</span>
+                        )}
+                      </div>
                     </div>
-                    <div className={styles.itemChips}>
-                      {outfit.wardrobeItems.slice(0, 3).map((item) => (
-                        <span key={item.id} className={styles.itemChip}>
-                          {item.name}
-                        </span>
-                      ))}
-                      {outfit.wardrobeItems.length > 3 && (
-                        <span className={styles.itemChip}>+{outfit.wardrobeItems.length - 3} more</span>
-                      )}
+
+                    <div className={styles.outfitMeta}>
+                      <span className={styles.outfitDate}>
+                        {new Date(outfit.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
-
-                  <div className={styles.outfitMeta}>
-                    <span className={styles.outfitDate}>
-                      {new Date(outfit.createdAt).toLocaleDateString()}
-                    </span>
-                    <button
-                      className={styles.deleteOutfitBtn}
-                      onClick={() => handleDelete(outfit.id)}
-                    >🗑</button>
-                  </div>
-                </div>
+                </Link>
+                <button
+                  className={styles.deleteOutfitBtn}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDelete(outfit.id);
+                  }}
+                >🗑</button>
               </div>
             ))
           )}
+
         </div>
       )}
 

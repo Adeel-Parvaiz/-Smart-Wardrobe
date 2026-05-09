@@ -81,6 +81,12 @@
 
 .outfitBody { padding: 1rem; }
 
+.outfitLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
 .outfitName {
   font-size: 1rem;
   font-weight: 600;

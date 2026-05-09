@@ -11,8 +11,7 @@ export const LIMITS = {
 } as const;
 
 export function toCleanString(value: unknown) {
-  return value
-    .toString()
+  return String(value ?? "")
     .replace(/\s+/g, " ")
     .trim();
 }
