@@ -1,19 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import { dbConnect } from "@/lib/mongodb";
 import { UserModel } from "@/models/User";
 import mongoose from "mongoose";
-import { NextRequest } from "next/server";
 
-type Params = {
-  params: {
-    id: string;
-  };
+type Context = {
+  params: Promise<{ id: string }>;
 };
 
 export async function PATCH(
   request: NextRequest,
-  { params }: Params
+  context: Context
 ) {
   const session = await getAuthSession();
 
@@ -25,7 +22,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { id } = params;
+  const { id } = await context.params;
 
   if (!mongoose.isValidObjectId(id)) {
     return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
