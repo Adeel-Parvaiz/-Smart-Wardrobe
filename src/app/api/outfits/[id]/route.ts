@@ -24,7 +24,7 @@ export async function GET(
     );
   }
 
-  const { id } = await params;
+  const { id } = params;
 
   if (!mongoose.isValidObjectId(id)) {
     return NextResponse.json(
@@ -93,7 +93,7 @@ export async function DELETE(
     );
   }
 
-  const { id } = await params;
+  const { id } = params;
 
   if (!mongoose.isValidObjectId(id)) {
     return NextResponse.json(
