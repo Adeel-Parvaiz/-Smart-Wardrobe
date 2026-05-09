@@ -7,7 +7,7 @@ import { WardrobeItemModel } from "@/models/WardrobeItem";
 import mongoose from "mongoose";
 
 type Context = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 // ── GET: fetch single outfit with its wardrobe items ──────────
@@ -24,7 +24,7 @@ export async function GET(
     );
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   if (!mongoose.isValidObjectId(id)) {
     return NextResponse.json(
@@ -93,7 +93,7 @@ export async function DELETE(
     );
   }
 
-  const { id } = params;
+  const { id } = await params;
 
   if (!mongoose.isValidObjectId(id)) {
     return NextResponse.json(
