@@ -7,7 +7,7 @@ import { WardrobeItemModel } from "@/models/WardrobeItem";
 import mongoose from "mongoose";
 
 type Context = {
-  params: Promise{ id: string };
+  params: Promise<{ id: string }>;  // ✅ fixed generic syntax
 };
 
 // ── GET: fetch single outfit with its wardrobe items ──────────
@@ -16,21 +16,14 @@ export async function GET(
   { params }: Context
 ) {
   const session = await getAuthSession();
-
   if (!session?.user?.id) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = params;
+  const { id } = await params;  // ✅ awaited
 
   if (!mongoose.isValidObjectId(id)) {
-    return NextResponse.json(
-      { error: "Outfit not found." },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
   }
 
   await dbConnect();
@@ -44,20 +37,11 @@ export async function GET(
   }).lean();
 
   if (!outfit) {
-    return NextResponse.json(
-      { error: "Outfit not found." },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
   }
 
-  const outfitItems = await OutfitItemModel.find({
-    outfitId: outfitObjectId,
-  }).lean();
-
-  const wardrobeItemIds = outfitItems.map(
-    (oi) => oi.wardrobeItemId
-  );
-
+  const outfitItems = await OutfitItemModel.find({ outfitId: outfitObjectId }).lean();
+  const wardrobeItemIds = outfitItems.map((oi) => oi.wardrobeItemId);
   const wardrobeItems = await WardrobeItemModel.find({
     _id: { $in: wardrobeItemIds },
   }).lean();
@@ -85,21 +69,14 @@ export async function DELETE(
   { params }: Context
 ) {
   const session = await getAuthSession();
-
   if (!session?.user?.id) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = params;
+  const { id } = await params;  // ✅ awaited
 
   if (!mongoose.isValidObjectId(id)) {
-    return NextResponse.json(
-      { error: "Outfit not found." },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
   }
 
   await dbConnect();
@@ -113,20 +90,11 @@ export async function DELETE(
   }).lean() as any;
 
   if (!existing) {
-    return NextResponse.json(
-      { error: "Outfit not found." },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
   }
 
-  await OutfitModel.deleteOne({
-    _id: outfitObjectId,
-    userId: userObjectId,
-  });
-
-  await OutfitItemModel.deleteMany({
-    outfitId: outfitObjectId,
-  });
+  await OutfitModel.deleteOne({ _id: outfitObjectId, userId: userObjectId });
+  await OutfitItemModel.deleteMany({ outfitId: outfitObjectId });
 
   return NextResponse.json({ success: true });
 }
