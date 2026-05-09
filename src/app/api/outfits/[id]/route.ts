@@ -7,7 +7,7 @@ import { WardrobeItemModel } from "@/models/WardrobeItem";
 import mongoose from "mongoose";
 
 type Context = {
-  params: Promise<{ id: string }>;
+  params: Promise{ id: string };
 };
 
 // ── GET: fetch single outfit with its wardrobe items ──────────
