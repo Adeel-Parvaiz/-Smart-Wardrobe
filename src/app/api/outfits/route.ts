@@ -103,9 +103,11 @@ export async function POST(request: Request) {
   const name = sanitizeRequiredText(body?.name, LIMITS.name);
   const occasion = sanitizeOptionalText(body?.occasion, LIMITS.occasion);
   const itemIdsRaw = Array.isArray(body?.itemIds) ? body.itemIds : [];
-  const itemIds = [
+
+  // ✅ typed as string[] explicitly to avoid unknown[]
+  const itemIds: string[] = [
     ...new Set(itemIdsRaw.map((id: unknown) => toCleanString(id)).filter(Boolean)),
-  ].slice(0, LIMITS.outfitItems);
+  ].slice(0, LIMITS.outfitItems) as string[];
 
   if (!name) {
     return NextResponse.json({ error: "Outfit name is required." }, { status: 400 });
@@ -119,7 +121,7 @@ export async function POST(request: Request) {
   const userObjectId = new mongoose.Types.ObjectId(session.user.id);
 
   const ownedItems = await WardrobeItemModel.find({
-    _id: { $in: itemIds.map((id) => new mongoose.Types.ObjectId(id)) },
+    _id: { $in: itemIds.map((id) => new mongoose.Types.ObjectId(id)) }, // ✅ now string, no cast needed
     userId: userObjectId,
   }).lean<LeanWardrobeItem[]>();
 
