@@ -4,6 +4,16 @@ import { getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { dbConnect } from "@/lib/mongodb";
 import { UserModel } from "@/models/User";
+import mongoose from "mongoose";
+
+type LeanUser = {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+  email: string;
+  passwordHash: string;
+  role: string;
+  status: string;
+};
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -23,9 +33,10 @@ export const authOptions: NextAuthOptions = {
         }
 
         await dbConnect();
+
         const user = await UserModel.findOne({
           email: credentials.email.toLowerCase().trim(),
-        }).lean();
+        }).lean<LeanUser>();  // ✅ typed
 
         if (!user || user.status !== "ACTIVE") {
           return null;
@@ -66,8 +77,6 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
-
-
 
 export async function getAuthSession() {
   return getServerSession(authOptions);
