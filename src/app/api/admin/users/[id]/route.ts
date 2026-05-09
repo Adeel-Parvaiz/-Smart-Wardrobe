@@ -3,7 +3,6 @@ import { getAuthSession } from "@/lib/auth";
 import { dbConnect } from "@/lib/mongodb";
 import { UserModel } from "@/models/User";
 import mongoose from "mongoose";
-
 type Context = {
   params: Promise<{
     id: string;
