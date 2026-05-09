@@ -20,7 +20,6 @@ export async function POST(request: Request) {
     if (!token || !password) {
       return NextResponse.json({ error: "Token and password are required." }, { status: 400 });
     }
-
     if (password.length < 8) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters." },
@@ -29,20 +28,25 @@ export async function POST(request: Request) {
     }
 
     const tokenHash = hashToken(token);
-
     await dbConnect();
+
     const resetToken = await PasswordResetTokenModel.findOne({
       tokenHash,
       usedAt: null,
       expiresAt: { $gt: new Date() },
-    }).lean();
+    }).lean<{                                        // ✅ typed
+      _id: mongoose.Types.ObjectId;
+      userId: mongoose.Types.ObjectId;
+      tokenHash: string;
+      expiresAt: Date;
+      usedAt: Date | null;
+    }>();
 
     if (!resetToken) {
       return NextResponse.json({ error: "Invalid or expired reset token." }, { status: 400 });
     }
 
     const passwordHash = await hash(password, 12);
-
     const userObjectId = new mongoose.Types.ObjectId(resetToken.userId);
     const tokenObjectId = new mongoose.Types.ObjectId(resetToken._id);
 
