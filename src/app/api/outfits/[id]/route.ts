@@ -9,8 +9,6 @@ import mongoose from "mongoose";
 type Context = {
   params: Promise<{ id: string }>;  // ✅ fixed generic syntax
 };
-
-// ── GET: fetch single outfit with its wardrobe items ──────────
 export async function GET(
   _request: NextRequest,
   { params }: Context
@@ -20,7 +18,7 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;  // ✅ awaited
+  const { id } = await params;
 
   if (!mongoose.isValidObjectId(id)) {
     return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
@@ -34,20 +32,33 @@ export async function GET(
   const outfit = await OutfitModel.findOne({
     _id: outfitObjectId,
     userId: userObjectId,
-  }).lean();
+  }).lean<{                         // ✅ explicit generic on lean()
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    occasion?: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }>();
 
   if (!outfit) {
     return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
   }
 
   const outfitItems = await OutfitItemModel.find({ outfitId: outfitObjectId }).lean();
-  const wardrobeItemIds = outfitItems.map((oi) => oi.wardrobeItemId);
+  const wardrobeItemIds = outfitItems.map((oi) => (oi as any).wardrobeItemId);
   const wardrobeItems = await WardrobeItemModel.find({
     _id: { $in: wardrobeItemIds },
-  }).lean();
+  }).lean<{                         // ✅ explicit generic on lean()
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    category: string;
+    color?: string;
+    brand?: string;
+    imageUrl: string;
+  }[]>();
 
   return NextResponse.json({
-    id: (outfit as any)._id.toString(),
+    id: outfit._id.toString(),      // ✅ no more `as any` needed
     name: outfit.name,
     occasion: outfit.occasion ?? undefined,
     createdAt: outfit.createdAt,
@@ -61,40 +72,4 @@ export async function GET(
       imageUrl: wi.imageUrl,
     })),
   });
-}
-
-// ── DELETE: remove outfit and its items ───────────────────────
-export async function DELETE(
-  _request: NextRequest,
-  { params }: Context
-) {
-  const session = await getAuthSession();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const { id } = await params;  // ✅ awaited
-
-  if (!mongoose.isValidObjectId(id)) {
-    return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
-  }
-
-  await dbConnect();
-
-  const userObjectId = new mongoose.Types.ObjectId(session.user.id);
-  const outfitObjectId = new mongoose.Types.ObjectId(id);
-
-  const existing = await OutfitModel.findOne({
-    _id: outfitObjectId,
-    userId: userObjectId,
-  }).lean() as any;
-
-  if (!existing) {
-    return NextResponse.json({ error: "Outfit not found." }, { status: 404 });
-  }
-
-  await OutfitModel.deleteOne({ _id: outfitObjectId, userId: userObjectId });
-  await OutfitItemModel.deleteMany({ outfitId: outfitObjectId });
-
-  return NextResponse.json({ success: true });
 }
